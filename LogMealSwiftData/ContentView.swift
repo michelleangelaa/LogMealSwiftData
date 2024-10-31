@@ -9,9 +9,10 @@ import SwiftData
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.modelContext) var context
     @State private var isShowingItemSheet = false
-    @Query(sort: \Meal.date)
-    var meals: [Meal] = []
+    @Query(sort: \Meal.date) var meals: [Meal] = []
+    @State private var mealToEdit: Meal?
 
     var body: some View {
         NavigationStack {
@@ -19,12 +20,21 @@ struct ContentView: View {
                 ForEach(meals) { meal in
                     MealCell(meal: meal)
                 }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        context.delete(meals[index])
+                    }
+                }
             }
+            .onAppear(perform: addSample)
             .navigationBarTitle("Log Meal")
             .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $isShowingItemSheet) {
                 LogMealSheet()
             }
+//            .sheet(item: $mealToEdit) { meal in
+//                Update
+//            }
             .toolbar {
                 if !meals.isEmpty {
                     Button("Log meal", systemImage: "plus") {
@@ -44,6 +54,11 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    func addSample() {
+        let meal1 = Meal(ingredient: "pizza", date: .now, servingQty: 2, servingUnit: "spoon", reaction: "yummy", notes: "ok")
+        context.insert(meal1)
     }
 }
 
